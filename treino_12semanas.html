@@ -423,33 +423,44 @@ hr{border:none;border-top:1px solid var(--border);margin:22px 0;}
 
 <!-- ═══ PAGE: TRACKER ═══ -->
 <div id="page-tracker" class="page">
-<div class="page-inner">
+<div class="page-inner" style="padding-bottom:100px">
+
   <div class="tracker-hdr">
     <div class="tracker-title">WORKOUT TRACKER</div>
-    <div class="tracker-sub">Dados sincronizados na nuvem · Salvamento automático por semana e dia</div>
+    <div class="tracker-sub" id="tracker-mode-label">Selecione uma data para iniciar o treino</div>
   </div>
 
-  <div class="week-selector">
-    <button class="wkarrow" onclick="changeWeek(-1)">◂</button>
-    <div class="wkinfo">
-      <div class="wklabel" id="wk-label">Semana 1</div>
-      <div class="wkphaselbl" id="wk-phase-lbl">Fase 1 — Acumulação · 65–70% 1RM · RPE 7</div>
+  <!-- DATE NAVIGATOR -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;margin-bottom:14px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <button class="wkarrow" onclick="shiftDate(-1)" title="Dia anterior">◂</button>
+      <div style="flex:1;text-align:center;">
+        <div id="trk-date-display" style="font-family:'Bebas Neue';font-size:26px;letter-spacing:0.04em;color:var(--gold2);cursor:pointer;" onclick="document.getElementById('trk-date-input').showPicker()">
+          carregando...
+        </div>
+        <div id="trk-date-weekday" style="font-size:11px;color:var(--text3);margin-top:1px;"></div>
+      </div>
+      <button class="wkarrow" onclick="shiftDate(1)" title="Próximo dia">▸</button>
     </div>
-    <button class="wkarrow" onclick="changeWeek(1)">▸</button>
+    <input type="date" id="trk-date-input" style="position:absolute;opacity:0;pointer-events:none;" onchange="onDatePicked(this.value)">
+    <div style="display:flex;gap:6px;justify-content:center;">
+      <button onclick="goToday()" style="padding:5px 14px;font-size:11px;font-weight:600;border:1px solid var(--border2);border-radius:20px;background:transparent;color:var(--text2);cursor:pointer;font-family:'Barlow';">Hoje</button>
+      <div id="trk-status-badge" style="padding:5px 14px;font-size:11px;font-weight:600;border-radius:20px;background:var(--gold-bg);color:var(--gold2);border:1px solid var(--gold-border);">—</div>
+    </div>
   </div>
 
-  <div class="day-selector">
-    <button class="dsb active" onclick="selectDay(0)"><span class="dsbday">Terça</span><span class="dsbname">Push A</span></button>
-    <button class="dsb" onclick="selectDay(1)"><span class="dsbday">Quinta</span><span class="dsbname">Lower A</span></button>
-    <button class="dsb" onclick="selectDay(2)"><span class="dsbday">Sexta</span><span class="dsbname">Pull A</span></button>
-    <button class="dsb" onclick="selectDay(3)"><span class="dsbday">Sábado</span><span class="dsbname">Push B</span></button>
-    <button class="dsb" onclick="selectDay(4)"><span class="dsbday">Dom</span><span class="dsbname">Terra+Pull</span></button>
+  <!-- WORKOUT SELECTOR for the day -->
+  <div id="trk-workout-selector" style="display:none;margin-bottom:12px;">
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:8px;">Treino do dia</div>
+    <div id="trk-workout-pills" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
   </div>
 
+  <!-- EXERCISES -->
   <div id="tracker-exercises"></div>
 
-  <div class="settings-link" onclick="showSetup()">
-    ⚙ Configurações do banco de dados · <span id="bin-id-display" style="font-family:'DM Mono';font-size:11px;color:var(--text3)">carregando...</span>
+  <!-- BOTTOM SETTINGS -->
+  <div class="settings-link" onclick="showSetup()" style="margin-top:10px;">
+    ⚙ Configurações · <span id="bin-id-display" style="font-family:'DM Mono';font-size:11px;color:var(--text3)">carregando...</span>
   </div>
 </div>
 
@@ -464,19 +475,15 @@ hr{border:none;border-top:1px solid var(--border);margin:22px 0;}
 <div class="page-inner">
   <div class="tracker-hdr">
     <div class="tracker-title">HISTÓRICO & PRs</div>
-    <div class="tracker-sub">Evolução semana a semana</div>
+    <div class="tracker-sub">Todos os treinos registrados</div>
   </div>
-  <div class="sec-label">Records Pessoais</div>
-  <div class="pr-grid">
-    <div class="pr-card"><div class="pr-exercise">Agachamento</div><div class="pr-weight" id="pr-squat">80<span class="pr-kg"> kg</span></div><div class="pr-sub">1RM inicial<span id="badge-squat"></span></div></div>
-    <div class="pr-card"><div class="pr-exercise">Supino Reto</div><div class="pr-weight" id="pr-bench">75<span class="pr-kg"> kg</span></div><div class="pr-sub">1RM inicial<span id="badge-bench"></span></div></div>
-    <div class="pr-card"><div class="pr-exercise">Terra</div><div class="pr-weight" id="pr-dead">70<span class="pr-kg"> kg</span></div><div class="pr-sub">1RM inicial<span id="badge-dead"></span></div></div>
-    <div class="pr-card"><div class="pr-exercise">Dev. Militar</div><div class="pr-weight" id="pr-ohp">35<span class="pr-kg"> kg</span></div><div class="pr-sub">1RM inicial<span id="badge-ohp"></span></div></div>
-  </div>
+  <div id="pr-grid-dyn" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:12px 0;"></div>
   <hr>
-  <div class="sec-label">Selecione a semana</div>
-  <div class="wk-hist-grid" id="wk-hist-grid"></div>
-  <div id="hist-detail"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <div class="sec-label" style="margin:0">Todos os treinos registrados</div>
+    <button onclick="toggleHistSort()" id="hist-sort-btn" style="font-size:11px;font-weight:600;padding:4px 12px;border:1px solid var(--border2);border-radius:20px;background:transparent;color:var(--text2);cursor:pointer;font-family:'Barlow';">Mais recentes primeiro</button>
+  </div>
+  <div id="hist-list"></div>
   <button class="clear-btn" onclick="clearAllData()">Apagar todos os dados do treino</button>
 </div>
 </div><!-- end historico -->
@@ -485,80 +492,94 @@ hr{border:none;border-top:1px solid var(--border);margin:22px 0;}
 
 <script>
 /* ═══════════════════════════════════════════════════════════
-   DATA — populated at runtime from JSONBin plan bin
+   DATA — loaded from JSONBin at runtime
 ═══════════════════════════════════════════════════════════ */
-let WORKOUTS=[];   // loaded from PLAN_BIN_ID
-let PHASES=[];     // loaded from PLAN_BIN_ID
-let planJSON=null; // full plan object
-
-const PR_MAP={
-  't1':{el:'pr-bench', badge:'badge-bench', base:75},
-  'q1':{el:'pr-squat', badge:'badge-squat', base:80},
-  'd1':{el:'pr-dead',  badge:'badge-dead',  base:70},
-  't2':{el:'pr-ohp',   badge:'badge-ohp',   base:35},
-};
+let WORKOUTS = [];
+let planJSON  = null;
 
 /* ═══════════════════════════════════════════════════════════
-   JSONBIN API
-   Bin A (PLAN_BIN_ID)  → plano de treino + nutrição (read-only)
-   Bin B (BIN_ID)       → histórico de séries (read/write)
+   JSONBIN — Bin A: plan (read-only) · Bin B: history (r/w)
+   Storage key per session: date string "YYYY-MM-DD_workoutId"
 ═══════════════════════════════════════════════════════════ */
-const JSONBIN_URL='https://api.jsonbin.io/v3';
-let API_KEY='';
-let BIN_ID='';        // histórico
-let PLAN_BIN_ID='';   // plano (read-only)
-let cloudData={};     // full bin object cached locally
-let saveTimer=null;
-let pendingSave=false;
+const JSONBIN_URL = 'https://api.jsonbin.io/v3';
+let API_KEY      = '';
+let BIN_ID       = '';       // history bin
+let PLAN_BIN_ID  = '';       // plan bin (read-only)
+let cloudData    = {};
+let saveTimer    = null;
 
-function storKey(week,dayId){return `w${week+1}_${dayId}`;}
+/* ---------- helpers ---------- */
+function dateKey(dateStr, workoutId){ return `${dateStr}_${workoutId}`; }
+function todayStr(){
+  const d = new Date();
+  return d.toISOString().slice(0,10); // YYYY-MM-DD
+}
+function formatDatePT(dateStr){
+  const [y,m,d] = dateStr.split('-');
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return `${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
+}
+function weekdayPT(dateStr){
+  const days = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const d = new Date(dateStr+'T12:00:00');
+  return days[d.getDay()];
+}
+function weekdayIdFromDate(dateStr){
+  // Returns the workout id matching the weekday
+  const map = ['dom','seg','ter','qua','qui','sex','sab'];
+  const d = new Date(dateStr+'T12:00:00');
+  return map[d.getDay()];
+}
 
-async function apiFetch(path,method='GET',body=null){
-  const opts={
+/* ---------- API ---------- */
+async function apiFetch(path, method='GET', body=null){
+  const opts = {
     method,
     headers:{'X-Master-Key':API_KEY,'Content-Type':'application/json','X-Bin-Versioning':'false'}
   };
-  if(body) opts.body=JSON.stringify(body);
-  const r=await fetch(JSONBIN_URL+path,opts);
+  if(body) opts.body = JSON.stringify(body);
+  const r = await fetch(JSONBIN_URL + path, opts);
   if(!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
 
 async function loadBin(){
   setCloud('syncing','Carregando dados...');
-  try{
-    const res=await apiFetch(`/b/${BIN_ID}/latest`);
-    cloudData=res.record||{};
-    setCloud('ok','Sincronizado com JSONBin.io');
+  try {
+    const res = await apiFetch(`/b/${BIN_ID}/latest`);
+    cloudData = res.record || {};
+    setCloud('ok','Sincronizado');
     return true;
-  }catch(e){
-    setCloud('error','Erro ao carregar dados');
-    return false;
-  }
+  } catch(e){ setCloud('error','Erro ao carregar'); return false; }
 }
 
-async function saveToBin(){
-  setCloud('syncing','Salvando...');
-  try{
-    await apiFetch(`/b/${BIN_ID}`,'PUT',cloudData);
-    setCloud('ok','Salvo na nuvem ✓');
-  }catch(e){
-    setCloud('error','Erro ao salvar — verifique conexão');
-  }
+async function loadPlanBin(){
+  try {
+    const res = await apiFetch(`/b/${PLAN_BIN_ID}/latest`);
+    planJSON = res.record;
+    WORKOUTS.length = 0;
+    (planJSON.workouts||[]).forEach(w => WORKOUTS.push(w));
+    return true;
+  } catch(e){ console.error('Erro plano:',e); return false; }
 }
 
 function schedSave(){
-  pendingSave=true;
+  setCloud('syncing','Salvando...');
   if(saveTimer) clearTimeout(saveTimer);
-  saveTimer=setTimeout(()=>{if(pendingSave){pendingSave=false;saveToBin();}},1200);
+  saveTimer = setTimeout(async ()=>{
+    try {
+      await apiFetch(`/b/${BIN_ID}`,'PUT',cloudData);
+      setCloud('ok','Salvo ✓');
+    } catch(e){ setCloud('error','Erro ao salvar'); }
+  }, 1200);
 }
 
-function setCloud(state,msg){
-  const d=document.getElementById('cloud-dot');
-  const l=document.getElementById('cloud-label');
+function setCloud(state, msg){
+  const d = document.getElementById('cloud-dot');
+  const l = document.getElementById('cloud-label');
   if(!d||!l) return;
-  d.className='cloud-dot'+(state==='syncing'?' syncing':state==='error'?' error':'');
-  l.textContent=msg;
+  d.className = 'cloud-dot' + (state==='syncing'?' syncing':state==='error'?' error':'');
+  l.textContent = msg;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -569,590 +590,689 @@ function showSetup(){
   document.getElementById('main-app').style.display='none';
   document.getElementById('step1').style.display='block';
   document.getElementById('step2').style.display='none';
-  document.getElementById('dot1').classList.add('active');
-  document.getElementById('dot2').classList.remove('active');
-  // pre-fill if we have data
   if(API_KEY) document.getElementById('api-key-input').value=API_KEY;
 }
-
 function setupStep1(){
-  const key=document.getElementById('api-key-input').value.trim();
-  const err=document.getElementById('step1-err');
+  const key = document.getElementById('api-key-input').value.trim();
+  const err = document.getElementById('step1-err');
   if(!key||key.length<20){err.style.display='block';return;}
   err.style.display='none';
-  API_KEY=key;
+  API_KEY = key;
   sessionStorage.setItem('hpb_api_key',key);
   document.getElementById('step1').style.display='none';
   document.getElementById('step2').style.display='block';
   document.getElementById('dot2').classList.add('active');
 }
-
 async function createBin(){
-  const btn=document.getElementById('create-btn');
-  btn.disabled=true;btn.textContent='Criando...';
-  const err=document.getElementById('step2-err');
-  try{
-    const res=await apiFetch('/b','POST',{_created:new Date().toISOString(),_program:'HPB-12W'});
-    BIN_ID=res.metadata.id;
+  const btn = document.getElementById('create-btn');
+  btn.disabled=true; btn.textContent='Criando...';
+  try {
+    const res = await apiFetch('/b','POST',{_created:new Date().toISOString(),_program:'HPB-PS'});
+    BIN_ID = res.metadata.id;
     sessionStorage.setItem('hpb_bin_id',BIN_ID);
-    cloudData={};
+    cloudData = {};
     finishSetup();
-  }catch(e){
-    err.style.display='block';err.textContent='Falha ao criar bin. Verifique a API Key.';
-    btn.disabled=false;btn.textContent='Criar novo banco de treino';
+  } catch(e){
+    document.getElementById('step2-err').style.display='block';
+    btn.disabled=false; btn.textContent='Criar novo banco de treino';
   }
 }
-
 async function loadExistingBin(){
-  const id=document.getElementById('bin-id-input').value.trim();
-  const err=document.getElementById('step2-err');
+  const id = document.getElementById('bin-id-input').value.trim();
+  const err = document.getElementById('step2-err');
   if(!id){err.style.display='block';err.textContent='Digite o ID do bin.';return;}
-  BIN_ID=id;
-  const ok=await loadBin();
-  if(!ok){err.style.display='block';err.textContent='Não foi possível acessar. Verifique o ID ou a API Key.';BIN_ID='';return;}
+  BIN_ID = id;
+  const ok = await loadBin();
+  if(!ok){err.style.display='block';err.textContent='Não foi possível acessar.';BIN_ID='';return;}
   sessionStorage.setItem('hpb_bin_id',BIN_ID);
   finishSetup();
 }
-
 function finishSetup(){
   document.getElementById('setup-overlay').style.display='none';
   document.getElementById('main-app').style.display='block';
-  document.getElementById('bin-id-display').textContent=BIN_ID;
-  renderTrackerExercises();
-  renderWkHistGrid();
-  updatePRDisplay();
+  const bd = document.getElementById('bin-id-display');
+  if(bd) bd.textContent = BIN_ID;
+  renderPlanoPage();
+  renderNutricaoPage();
+  initTracker();
+  renderHistorico();
 }
 
 /* ═══════════════════════════════════════════════════════════
    NAV
 ═══════════════════════════════════════════════════════════ */
-function showPage(p,el){
+function showPage(p, el){
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.nav-pill').forEach(x=>x.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
   if(el) el.classList.add('active');
-  if(p==='historico'){renderWkHistGrid();updatePRDisplay();}
+  if(p==='historico') renderHistorico();
+  if(p==='tracker') refreshTrackerDate();
 }
-
-function showSession(id,el){
-  document.querySelectorAll('#page-plano [id^="s-"]').forEach(x=>x.style.display='none');
+function showSession(id, el){
+  document.querySelectorAll('#page-plano [id^="s-"], #page-plano .session-content-dyn').forEach(x=>x.style.display='none');
   document.querySelectorAll('.stab').forEach(x=>x.classList.remove('active'));
-  document.getElementById(id).style.display='block';
+  const el2 = document.getElementById(id);
+  if(el2) el2.style.display='block';
+  if(el) el.classList.add('active');
+}
+function showSessionDyn(id, el){
+  document.querySelectorAll('.session-content-dyn').forEach(x=>x.style.display='none');
+  document.querySelectorAll('.stab').forEach(x=>x.classList.remove('active'));
+  const el2 = document.getElementById(id);
+  if(el2) el2.style.display='block';
   if(el) el.classList.add('active');
 }
 
 /* ═══════════════════════════════════════════════════════════
-   TRACKER STATE
+   TRACKER — DATE-BASED
 ═══════════════════════════════════════════════════════════ */
-let currentWeek=0;
-let currentDay=0;
+let trkDate     = todayStr();   // current date in tracker
+let trkWorkout  = null;         // current selected workout object
+let histSortDesc = true;
 
-function changeWeek(d){
-  currentWeek=Math.max(0,Math.min(11,currentWeek+d));
-  document.getElementById('wk-label').textContent=PHASES[currentWeek].label;
-  document.getElementById('wk-phase-lbl').textContent=PHASES[currentWeek].phase;
-  renderTrackerExercises();
+function initTracker(){
+  trkDate = todayStr();
+  refreshTrackerDate();
 }
 
-function selectDay(idx){
-  currentDay=idx;
-  document.querySelectorAll('.dsb').forEach((b,i)=>b.classList.toggle('active',i===idx));
-  renderTrackerExercises();
+function refreshTrackerDate(){
+  document.getElementById('trk-date-display').textContent = formatDatePT(trkDate);
+  document.getElementById('trk-date-weekday').textContent = weekdayPT(trkDate);
+  document.getElementById('trk-date-input').value = trkDate;
+  buildWorkoutSelector();
 }
 
-/* ═══════════════════════════════════════════════════════════
-   RENDER TRACKER
-═══════════════════════════════════════════════════════════ */
-function getVariationCycle(weekIdx){
-  // weekConfig has variationCycle per week; fallback to A/B/C rotation
-  const wc=planJSON&&planJSON.weekConfig&&planJSON.weekConfig[weekIdx];
-  return (wc&&wc.variationCycle)||['A','B','C'][weekIdx%3];
+function shiftDate(delta){
+  const d = new Date(trkDate+'T12:00:00');
+  d.setDate(d.getDate() + delta);
+  trkDate = d.toISOString().slice(0,10);
+  refreshTrackerDate();
+}
+
+function goToday(){
+  trkDate = todayStr();
+  refreshTrackerDate();
+}
+
+function onDatePicked(val){
+  if(!val) return;
+  trkDate = val;
+  refreshTrackerDate();
+}
+
+function buildWorkoutSelector(){
+  const sel = document.getElementById('trk-workout-selector');
+  const pills = document.getElementById('trk-workout-pills');
+  const modeLbl = document.getElementById('tracker-mode-label');
+  const statusBadge = document.getElementById('trk-status-badge');
+
+  if(!WORKOUTS.length){
+    sel.style.display='none';
+    document.getElementById('tracker-exercises').innerHTML='';
+    return;
+  }
+
+  // Check which workouts have data for this date
+  const withData = WORKOUTS.filter(w => {
+    const key = dateKey(trkDate, w.id);
+    const d = cloudData[key];
+    return d && Object.keys(d).length > 0;
+  });
+
+  // Determine mode
+  const isToday = trkDate === todayStr();
+  const isFuture = trkDate > todayStr();
+  const hasPast = withData.length > 0;
+
+  if(isFuture){
+    modeLbl.textContent = 'Data futura — visualização do plano';
+    statusBadge.textContent = 'Futuro';
+    statusBadge.style.background='var(--bg3)'; statusBadge.style.color='var(--text3)'; statusBadge.style.borderColor='var(--border)';
+  } else if(hasPast && !isToday){
+    modeLbl.textContent = 'Histórico — ' + formatDatePT(trkDate);
+    statusBadge.textContent = 'Histórico';
+    statusBadge.style.background='var(--blue-bg)'; statusBadge.style.color='var(--blue)'; statusBadge.style.borderColor='rgba(58,128,194,0.3)';
+  } else if(isToday){
+    modeLbl.textContent = 'Treino de hoje — ' + weekdayPT(trkDate);
+    statusBadge.textContent = hasPast ? 'Em andamento' : 'Novo treino';
+    statusBadge.style.background='var(--gold-bg)'; statusBadge.style.color='var(--gold2)'; statusBadge.style.borderColor='var(--gold-border)';
+  } else {
+    modeLbl.textContent = 'Treino de ' + formatDatePT(trkDate);
+    statusBadge.textContent = hasPast ? 'Registrado' : 'Sem registro';
+    statusBadge.style.background= hasPast?'var(--green-bg)':'var(--bg3)';
+    statusBadge.style.color= hasPast?'var(--green)':'var(--text3)';
+    statusBadge.style.borderColor= hasPast?'rgba(61,140,71,0.3)':'var(--border)';
+  }
+
+  // Build workout pills — show all 5 workouts, highlight ones with data
+  sel.style.display = 'block';
+  pills.innerHTML = '';
+
+  // Default selection: match weekday, or first with data, or first
+  const weekdayId = weekdayIdFromDate(trkDate);
+  let defaultWkt = WORKOUTS.find(w=>w.id===weekdayId)
+    || (withData.length>0 ? withData[0] : WORKOUTS[0]);
+  if(!trkWorkout || !WORKOUTS.find(w=>w.id===trkWorkout.id)){
+    trkWorkout = defaultWkt;
+  }
+
+  WORKOUTS.forEach(w => {
+    const hasD = withData.some(x=>x.id===w.id);
+    const isSelected = trkWorkout && trkWorkout.id === w.id;
+    const pill = document.createElement('button');
+    pill.style.cssText=`padding:6px 12px;font-size:11px;font-weight:600;border-radius:20px;cursor:pointer;font-family:'Barlow';white-space:nowrap;transition:all 0.15s;border:1px solid ${isSelected?'var(--gold)':hasD?'rgba(61,140,71,0.4)':'var(--border)'};background:${isSelected?'var(--gold)':hasD?'var(--green-bg)':'var(--bg2)'};color:${isSelected?'#000':hasD?'var(--green)':'var(--text2)'};`;
+    pill.textContent = (hasD?'✓ ':'')+w.shortName;
+    pill.onclick = ()=>{ trkWorkout = w; buildWorkoutSelector(); renderTrackerExercises(); };
+    pills.appendChild(pill);
+  });
+
+  renderTrackerExercises();
 }
 
 function renderTrackerExercises(){
-  const wkt=WORKOUTS[currentDay];
-  if(!wkt){return;}
-  const key=storKey(currentWeek,wkt.id);
-  const data=(cloudData[key])||{};
-  const wrap=document.getElementById('tracker-exercises');
-  wrap.innerHTML='';
-  const varCycle=getVariationCycle(currentWeek);
+  const wrap = document.getElementById('tracker-exercises');
+  if(!trkWorkout){ wrap.innerHTML=''; return; }
 
-  // Spine alert banner if this workout has one
-  if(wkt.spineAlert){
-    const alert=document.createElement('div');
-    alert.className='ib ib-red';
-    alert.style='margin-bottom:10px;font-size:12px;';
-    alert.innerHTML=`<div class="ib-title">⚠ Protocolo Coluna</div>${wkt.spineAlert}`;
-    wrap.appendChild(alert);
+  const key  = dateKey(trkDate, trkWorkout.id);
+  const data = cloudData[key] || {};
+  const isReadonly = trkDate < todayStr() && !cloudData[key];
+  wrap.innerHTML = '';
+
+  // Spine alert
+  if(trkWorkout.spineAlert){
+    const a = document.createElement('div');
+    a.className='ib ib-red'; a.style='margin-bottom:10px;font-size:12px;';
+    a.innerHTML=`<div class="ib-title">⚠ Coluna</div>${trkWorkout.spineAlert}`;
+    wrap.appendChild(a);
   }
 
-  // Variation banner
-  const varBanner=document.createElement('div');
-  varBanner.className='ib ib-gold';
-  varBanner.style='margin-bottom:10px;font-size:12px;';
-  varBanner.innerHTML=`<div class="ib-title">Variação da Semana: ${varCycle}</div>Cada exercício usa a implementação da coluna <strong>${varCycle}</strong> abaixo. Anote observações sobre a variação utilizada.`;
-  wrap.appendChild(varBanner);
+  // Warmup
+  if(trkWorkout.warmup){
+    const wu = document.createElement('div');
+    wu.className='ib ib-blue'; wu.style='margin-bottom:10px;font-size:12px;';
+    wu.innerHTML=`<div class="ib-title">Aquecimento</div>${trkWorkout.warmup}`;
+    wrap.appendChild(wu);
+  }
 
-  wkt.exercises.forEach(ex=>{
-    const exD=data[ex.id]||{};
-    const prev=getBestWeight(ex.id,currentWeek);
-    const varData=ex.variations&&ex.variations[varCycle];
-    let rows='';
-    for(let s=0;s<ex.sets;s++){
-      const sd=(exD.sets&&exD.sets[s])||{};
-      const wv=sd.w!=null?sd.w:'';
-      const rv=sd.r!=null?sd.r:'';
-      rows+=`<tr>
+  trkWorkout.exercises.forEach(ex => {
+    const exD = data[ex.id] || {};
+    const prev = getBestWeight(ex.id);
+
+    // Count sets: use plan sets, handle "X + Y" format
+    const setsCount = ex.sets;
+
+    let rows = '';
+    for(let s=0;s<setsCount;s++){
+      const sd = (exD.sets && exD.sets[s]) || {};
+      const wv = sd.w!=null ? sd.w : '';
+      const rv = sd.r!=null ? sd.r : '';
+      const ro = isReadonly ? 'disabled style="opacity:0.6"' : '';
+      rows += `<tr>
         <td class="snum">${s+1}</td>
-        <td><input class="fi${wv!==''?' hv':''}" type="number" inputmode="decimal" step="0.5" min="0" placeholder="kg" value="${wv}" 
+        <td><input class="fi${wv!==''?' hv':''}" type="number" inputmode="decimal" step="0.5" min="0" placeholder="kg" value="${wv}" ${ro}
           onchange="onField('${key}','${ex.id}',${s},'w',this.value,this)"
           oninput="this.classList.toggle('hv',this.value!='')"></td>
-        <td><input class="fi${rv!==''?' hv':''}" type="number" inputmode="numeric" step="1" min="0" placeholder="reps" value="${rv}"
+        <td><input class="fi${rv!==''?' hv':''}" type="number" inputmode="numeric" step="1" min="0" placeholder="reps" value="${rv}" ${ro}
           onchange="onField('${key}','${ex.id}',${s},'r',this.value,this)"
           oninput="this.classList.toggle('hv',this.value!='')"></td>
       </tr>`;
     }
-    const noteV=exD.note||'';
-    const varHtml=varData?`<div style="margin-top:5px;padding:6px 8px;background:var(--bg4);border-radius:6px;font-size:10px;color:var(--text2);border:1px solid var(--border2);">
-      <span style="color:var(--gold);font-weight:600">Var ${varCycle}:</span> <strong>${varData.impl}</strong> — ${varData.note}
-    </div>`:'';
-    const card=document.createElement('div');
-    card.className='ex-log-card';
-    card.innerHTML=`
+
+    const noteV = exD.note || '';
+    const techBadge = ex.technique && ex.technique!=='Normal'
+      ? `<span style="font-size:9px;font-weight:700;background:rgba(100,80,200,0.18);color:#9b87f5;padding:1px 5px;border-radius:3px;margin-left:5px;">${ex.technique}</span>` : '';
+    const spineTag = ex.spineNote
+      ? `<div style="margin-top:4px;font-size:10px;color:var(--red-bg);background:var(--red-bg);border-radius:4px;padding:3px 6px;color:#d07070;">⚠ ${ex.spineNote}</div>` : '';
+
+    const card = document.createElement('div');
+    card.className = 'ex-log-card';
+    card.innerHTML = `
       <div class="exlhdr">
         <div class="exlhdr-top">
-          <div>
-            <div class="exlname">${ex.name}</div>
-            <div class="exltarget">${ex.sets} séries · ${ex.rep} reps · <span class="tpill" style="font-size:10px">${ex.tempo}</span>${ex.techniqueNote?` · <span style="color:var(--gold);font-size:10px">${ex.techniqueNote}</span>`:''}</div>
-            ${varHtml}
+          <div style="flex:1;min-width:0;">
+            <div class="exlname">${ex.name}${techBadge}</div>
+            <div class="exltarget">${ex.sets} séries · ${ex.rep} reps · <span class="tpill" style="font-size:10px">${ex.tempo||'—'}</span>${ex.rest?` · <span style="font-size:10px;color:var(--blue)">${ex.rest}</span>`:''}</div>
+            ${ex.techniqueNote?`<div style="font-size:10px;color:var(--gold);margin-top:2px;">${ex.techniqueNote}</div>`:''}
+            ${spineTag}
           </div>
-          ${prev?`<div class="prev-badge">Melhor: ${prev} kg</div>`:''}
+          ${prev?`<div class="prev-badge" style="flex-shrink:0;">Melhor: ${prev} kg</div>`:''}
         </div>
+        ${ex.execution?`<div style="margin-top:6px;font-size:11px;color:var(--text3);line-height:1.5;border-top:1px solid var(--border);padding-top:5px;">${ex.execution}</div>`:''}
       </div>
       <table class="sets-tbl">
         <tr><th>Série</th><th>Peso (kg)</th><th>Reps</th></tr>
         ${rows}
       </table>
-      <textarea class="notes-field" placeholder="Var ${varCycle} — Observações (sensação, ajuste de carga...)" 
+      <textarea class="notes-field" placeholder="Observações desta série..." ${isReadonly?'disabled style="opacity:0.6"':''}
         oninput="onNote('${key}','${ex.id}',this.value)">${noteV}</textarea>
     `;
     wrap.appendChild(card);
   });
+
+  // Session notes
+  const skey = key+'__snote';
+  const snote = cloudData[skey] || '';
+  const snDiv = document.createElement('div');
+  snDiv.style='margin-top:10px;';
+  snDiv.innerHTML=`
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:6px;">Observações da sessão</div>
+    <textarea class="notes-field" style="border:1px solid var(--border);border-radius:var(--r);min-height:70px;" placeholder="Como foi o treino? Sensações, ajustes, qualidade do sono..." ${isReadonly?'disabled style="opacity:0.6"':''}
+      oninput="onSessionNote('${skey}',this.value)">${snote}</textarea>
+  `;
+  wrap.appendChild(snDiv);
 }
 
-function onField(key,exId,setIdx,field,value,el){
-  el.classList.toggle('hv',value!='');
-  ensurePath(key,exId,setIdx);
-  const v=value===''?'':parseFloat(field==='w'?value:value);
-  cloudData[key][exId].sets[setIdx][field]=v;
+/* ---------- field handlers ---------- */
+function onField(key, exId, setIdx, field, value, el){
+  el.classList.toggle('hv', value!='');
+  if(!cloudData[key]) cloudData[key]={};
+  if(!cloudData[key][exId]) cloudData[key][exId]={sets:[]};
+  while(cloudData[key][exId].sets.length <= setIdx) cloudData[key][exId].sets.push({});
+  cloudData[key][exId].sets[setIdx][field] = value===''?'':parseFloat(value);
   schedSave();
   updatePRDisplay();
 }
-
-function onNote(key,exId,value){
+function onNote(key, exId, value){
   if(!cloudData[key]) cloudData[key]={};
   if(!cloudData[key][exId]) cloudData[key][exId]={sets:[]};
-  cloudData[key][exId].note=value;
+  cloudData[key][exId].note = value;
+  schedSave();
+}
+function onSessionNote(skey, value){
+  cloudData[skey] = value;
   schedSave();
 }
 
-function ensurePath(key,exId,setIdx){
-  if(!cloudData[key]) cloudData[key]={};
-  if(!cloudData[key][exId]) cloudData[key][exId]={sets:[]};
-  if(!cloudData[key][exId].sets) cloudData[key][exId].sets=[];
-  for(let i=cloudData[key][exId].sets.length;i<=setIdx;i++)
-    cloudData[key][exId].sets.push({});
-}
-
 /* ═══════════════════════════════════════════════════════════
-   PR & HISTORY
+   PR TRACKING
 ═══════════════════════════════════════════════════════════ */
-function getBestWeight(exId,upToWeek){
-  let best=0;
-  for(let w=0;w<=upToWeek;w++){
-    for(const wkt of WORKOUTS){
-      const data=cloudData[storKey(w,wkt.id)];
-      if(!data||!data[exId]||!data[exId].sets) continue;
-      data[exId].sets.forEach(s=>{
-        if(s&&s.w!==''&&s.w!=null&&parseFloat(s.w)>best) best=parseFloat(s.w);
-      });
-    }
+function getBestWeight(exId){
+  let best = 0;
+  for(const [k, dayData] of Object.entries(cloudData)){
+    if(typeof dayData !== 'object' || !dayData[exId]) continue;
+    const sets = dayData[exId].sets;
+    if(!sets) continue;
+    sets.forEach(s=>{
+      if(s && s.w!=='' && s.w!=null && parseFloat(s.w)>best) best=parseFloat(s.w);
+    });
   }
-  return best>0?best:null;
+  return best>0 ? best : null;
 }
 
 function updatePRDisplay(){
-  for(const[exId,info] of Object.entries(PR_MAP)){
-    const best=getBestWeight(exId,11);
-    if(!best) continue;
-    const el=document.getElementById(info.el);
-    if(el && best>info.base){
-      el.innerHTML=`${best}<span class="pr-kg"> kg</span>`;
-      const b=document.getElementById(info.badge);
-      if(b) b.innerHTML=`<span class="pr-badge">▲ PR</span>`;
+  const grid = document.getElementById('pr-grid-dyn');
+  if(!grid || !WORKOUTS.length) return;
+  // Collect all exercises with recorded data
+  const prMap = {};
+  for(const [k, dayData] of Object.entries(cloudData)){
+    if(typeof dayData !== 'object') continue;
+    for(const [exId, exData] of Object.entries(dayData)){
+      if(!exData||!exData.sets) continue;
+      const best = exData.sets.reduce((m,s)=>s&&s.w!=null&&parseFloat(s.w||0)>m?parseFloat(s.w):m, 0);
+      if(best>0 && (!prMap[exId]||best>prMap[exId])) prMap[exId]=best;
     }
   }
-}
-
-let selectedHistWeek=0;
-
-function renderWkHistGrid(){
-  const grid=document.getElementById('wk-hist-grid');
-  if(!grid) return;
-  grid.innerHTML='';
-  for(let w=0;w<12;w++){
-    const hasData=WORKOUTS.some(wkt=>{
-      const d=cloudData[storKey(w,wkt.id)];
-      return d&&Object.keys(d).length>0;
+  // Build PR cards from plan exercises that have a record
+  const cards = [];
+  WORKOUTS.forEach(w=>{
+    w.exercises.forEach(ex=>{
+      if(prMap[ex.id]){
+        cards.push({name:ex.name, weight:prMap[ex.id]});
+      }
     });
-    const btn=document.createElement('button');
-    btn.className='wkhb'+(hasData?' has-data':'')+(w===selectedHistWeek?' active-h':'');
-    btn.innerHTML=`<span class="wkn">S${w+1}</span><span class="wks">${w===3||w===7||w===11?'DELOAD':''}</span>`;
-    const ww=w;
-    btn.onclick=()=>{selectedHistWeek=ww;renderWkHistGrid();renderHistDetail(ww);};
-    grid.appendChild(btn);
-  }
-  renderHistDetail(selectedHistWeek);
-}
-
-function renderHistDetail(week){
-  const wrap=document.getElementById('hist-detail');
-  if(!wrap) return;
-  wrap.innerHTML='';
-  let any=false;
-  WORKOUTS.forEach(wkt=>{
-    const data=cloudData[storKey(week,wkt.id)];
-    if(!data) return;
-    let rows='';
-    wkt.exercises.forEach(ex=>{
-      const ed=data[ex.id];
-      if(!ed||!ed.sets) return;
-      const sets=ed.sets.filter(s=>s&&(s.w!==''&&s.w!=null||s.r!==''&&s.r!=null));
-      if(!sets.length) return;
-      const best=sets.reduce((b,s)=>parseFloat(s.w||0)>parseFloat(b.w||0)?s:b,{w:0,r:0});
-      const sum=best.w?`${best.w} kg × ${best.r||'?'} reps`:`${sets.length} série(s)`;
-      rows+=`<div class="hrow"><span class="hrowname">${ex.name}</span><span class="hrowsets">${sum}</span></div>`;
-    });
-    if(!rows) return;
-    any=true;
-    const blk=document.createElement('div');
-    blk.className='hdv';
-    blk.innerHTML=`<div class="hdv-hdr"><div class="hdv-name">${wkt.dayName} · ${wkt.name}</div><div class="hdv-sub">${PHASES[week].label}</div></div>${rows}`;
-    wrap.appendChild(blk);
   });
-  if(!any) wrap.innerHTML=`<div class="empty-h">Nenhum dado registrado na Semana ${week+1}.</div>`;
+  if(!cards.length){
+    grid.innerHTML='<div style="grid-column:1/-1;font-size:12px;color:var(--text3);font-style:italic;padding:12px 0;">Nenhum PR registrado ainda. Complete seu primeiro treino!</div>';
+    return;
+  }
+  cards.sort((a,b)=>b.weight-a.weight);
+  grid.innerHTML = cards.slice(0,8).map(c=>`
+    <div class="pr-card">
+      <div class="pr-exercise">${c.name.length>28?c.name.slice(0,26)+'…':c.name}</div>
+      <div class="pr-weight">${c.weight}<span class="pr-kg"> kg</span></div>
+      <div class="pr-sub">Melhor série</div>
+    </div>`).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HISTORICO — date-list view
+═══════════════════════════════════════════════════════════ */
+function renderHistorico(){
+  updatePRDisplay();
+  renderHistList();
+}
+
+function toggleHistSort(){
+  histSortDesc = !histSortDesc;
+  document.getElementById('hist-sort-btn').textContent = histSortDesc ? 'Mais recentes primeiro' : 'Mais antigos primeiro';
+  renderHistList();
+}
+
+function renderHistList(){
+  const list = document.getElementById('hist-list');
+  if(!list) return;
+
+  // Collect all unique date+workout combos that have data
+  const entries = [];
+  for(const [k, dayData] of Object.entries(cloudData)){
+    if(typeof dayData !== 'object') continue;
+    if(k.endsWith('__snote')) continue;
+    // Key format: YYYY-MM-DD_workoutId
+    const parts = k.split('_');
+    if(parts.length < 2) continue;
+    const dateStr = parts[0];
+    const wktId   = parts.slice(1).join('_');
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) continue;
+
+    const wkt = WORKOUTS.find(w=>w.id===wktId);
+    if(!wkt) continue;
+
+    // Check has actual data
+    const hasData = Object.values(dayData).some(exD =>
+      exD && exD.sets && exD.sets.some(s=>s&&(s.w!==''&&s.w!=null||s.r!==''&&s.r!=null))
+    );
+    if(!hasData) continue;
+
+    const snote = cloudData[k+'__snote'] || '';
+    entries.push({dateStr, wkt, dayData, snote, key:k});
+  }
+
+  if(!entries.length){
+    list.innerHTML='<div style="text-align:center;padding:24px 0;font-size:12px;color:var(--text3);font-style:italic;">Nenhum treino registrado ainda.</div>';
+    return;
+  }
+
+  entries.sort((a,b)=>{
+    const diff = a.dateStr.localeCompare(b.dateStr);
+    return histSortDesc ? -diff : diff;
+  });
+
+  list.innerHTML = entries.map(e=>{
+    // Build exercise summary rows
+    const rows = e.wkt.exercises.map(ex=>{
+      const exD = e.dayData[ex.id];
+      if(!exD||!exD.sets) return '';
+      const sets = exD.sets.filter(s=>s&&(s.w!==''&&s.w!=null));
+      if(!sets.length) return '';
+      const best = sets.reduce((b,s)=>parseFloat(s.w||0)>parseFloat(b.w||0)?s:b,{w:0,r:0});
+      const vol  = sets.reduce((t,s)=>t+(parseFloat(s.w||0)*parseInt(s.r||0)),0);
+      return `<div class="hrow">
+        <span class="hrowname">${ex.name.length>30?ex.name.slice(0,28)+'…':ex.name}</span>
+        <span class="hrowsets">${sets.length}×  ${best.w?best.w+'kg':'—'}${best.r?' × '+best.r:''}</span>
+      </div>`;
+    }).filter(Boolean).join('');
+
+    if(!rows) return '';
+
+    return `<div class="hdv" style="margin-bottom:10px;">
+      <div class="hdv-hdr" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <div>
+          <div class="hdv-name">${formatDatePT(e.dateStr)} · ${weekdayPT(e.dateStr)}</div>
+          <div class="hdv-sub">${e.wkt.name}</div>
+        </div>
+        <button onclick="event.stopPropagation();viewInTracker('${e.dateStr}','${e.wkt.id}')"
+          style="font-size:11px;font-weight:600;padding:4px 10px;border:1px solid var(--gold-border);border-radius:20px;background:var(--gold-bg);color:var(--gold2);cursor:pointer;font-family:'Barlow';white-space:nowrap;">Ver/Editar</button>
+      </div>
+      <div>
+        ${rows}
+        ${e.snote?`<div style="padding:6px 12px;font-size:11px;color:var(--text3);font-style:italic;border-top:1px solid var(--border);">"${e.snote}"</div>`:''}
+      </div>
+    </div>`;
+  }).filter(Boolean).join('');
+}
+
+function viewInTracker(dateStr, wktId){
+  trkDate = dateStr;
+  trkWorkout = WORKOUTS.find(w=>w.id===wktId) || WORKOUTS[0];
+  showPage('tracker', document.querySelector('.nav-pill:nth-child(3)'));
+  document.querySelectorAll('.nav-pill').forEach((p,i)=>{
+    p.classList.toggle('active', p.textContent.trim()==='Tracker');
+  });
+  refreshTrackerDate();
 }
 
 async function clearAllData(){
-  if(!confirm('Apagar TODOS os dados de treino das 12 semanas? Esta ação não pode ser desfeita.')) return;
-  cloudData={};
-  await saveToBin();
+  if(!confirm('Apagar TODOS os dados de treino? Esta ação não pode ser desfeita.')) return;
+  cloudData = {};
+  await apiFetch(`/b/${BIN_ID}`,'PUT',cloudData);
   renderTrackerExercises();
-  renderWkHistGrid();
-  updatePRDisplay();
+  renderHistorico();
 }
 
 /* ═══════════════════════════════════════════════════════════
-   LOAD PLAN FROM BIN A
-═══════════════════════════════════════════════════════════ */
-async function loadPlanBin(){
-  try{
-    const res=await apiFetch(`/b/${PLAN_BIN_ID}/latest`);
-    planJSON=res.record;
-    // Populate runtime arrays
-    WORKOUTS.length=0;
-    (planJSON.workouts||[]).forEach(w=>WORKOUTS.push(w));
-    PHASES.length=0;
-    (planJSON.weekConfig||[]).forEach(w=>PHASES.push({
-      label: w.deload ? `Semana ${w.week} ⬡ DELOAD${w.week===12?'+1RM':''}` : `Semana ${w.week}`,
-      phase: `${w.deload?'DELOAD — ':''}${w.intensityRange} 1RM · RPE ${w.rpe} · ${w.focus}`
-    }));
-    return true;
-  }catch(e){
-    console.error('Erro ao carregar plano:',e);
-    return false;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   RENDER PLANO PAGE FROM JSON
+   RENDER PLAN PAGE FROM JSON
 ═══════════════════════════════════════════════════════════ */
 function renderPlanoPage(){
-  if(!planJSON) return;
-  const p=planJSON;
-  const athlete=p.athlete||{};
-  const phases=p.phases||[];
-  const weekConfig=p.weekConfig||[];
-  const schedule=p.schedule||{};
-  const tips=p.tips||[];
+  if(!planJSON){ return; }
+  const p = planJSON;
+  const athlete = p.athlete || {};
+  const phases  = p.phases  || [];
+  const weekCfg = p.weekConfig || [];
+  const tips    = p.tips || [];
 
-  // ── Athlete stats
-  const statsHtml=(athlete.stats||[]).map(s=>
+  const statsHtml = (athlete.stats||[]).map(s=>
     `<div class="stat-card"><div class="stat-lbl">${s.label}</div><div class="stat-val">${s.value}<span class="stat-unit"> ${s.unit||''}</span></div></div>`
   ).join('');
 
-  const rmsHtml=(athlete.rms||[]).map(r=>
+  const rmsHtml = (athlete.rms||[]).map(r=>
     `<div class="rm-card"><div class="rm-lbl">${r.label}</div><div class="rm-val">${r.value}<span class="rm-kg"> kg</span></div></div>`
   ).join('');
 
-  // ── Phase cards
-  const phaseColors=['p1','p2','p3'];
-  const ptagColors=['ptag-b','ptag-g','ptag-gr'];
-  const phasesHtml=phases.map((ph,i)=>
-    `<div class="phase-card ${phaseColors[i]||'p1'}">
-      <div class="ptag ${ptagColors[i]||'ptag-b'}">Fase ${ph.id}</div>
+  const pColors = ['p1','p2','p3'];
+  const pTags   = ['ptag-b','ptag-g','ptag-gr'];
+  const phasesHtml = phases.map((ph,i)=>`
+    <div class="phase-card ${pColors[i]||'p1'}">
+      <div class="ptag ${pTags[i]||'ptag-b'}">Fase ${ph.id}</div>
       <div class="phase-name">${ph.name}</div>
       <div class="phase-wks">Semanas ${ph.weeks[0]}–${ph.weeks[ph.weeks.length-1]}</div>
       <div class="phase-desc">${ph.description||''}</div>
-    </div>`
-  ).join('');
+    </div>`).join('');
 
-  // ── Weekly schedule
-  const schedHtml=(p.workouts||[]).map(w=>
+  const schedHtml = (p.workouts||[]).map(w=>
     `<div class="sched-card">
       <div class="sched-day">${w.dayName}</div>
       <div class="sched-name">${w.shortName||w.name.split('—')[0].trim()}</div>
-      <div class="sched-sub">${w.muscles||''}</div>
+      <div class="sched-sub">${w.muscles||w.focus||''}</div>
       <div><span class="mbadge ${w.badgeClass||'b-comp'}">${w.badgeLabel||''}</span></div>
-    </div>`
+    </div>`).join('');
+
+  const tabsHtml = (p.workouts||[]).map((w,i)=>
+    `<button class="stab${i===0?' active':''}" onclick="showSessionDyn('sdyn-${w.id}',this)">${w.dayName} · ${(w.shortName||w.name.split('—')[0]).trim()}</button>`
   ).join('');
 
-  // ── Session tabs + content
-  const tabsHtml=(p.workouts||[]).map((w,i)=>
-    `<button class="stab${i===0?' active':''}" onclick="showSessionDyn('sdyn-${w.id}',this)">${w.dayName} · ${(w.name.split('—')[0]||'').trim()}</button>`
-  ).join('');
-
-  const sessionsHtml=(p.workouts||[]).map((w,i)=>{
-    const rows=(w.exercises||[]).map((ex,ei)=>{
-      const ssLabel=ex.superset?`<span class="ssbadge">SS</span>`:'';
-      return `<tr>
-        <td><span class="exnum">${ei+1}${ex.supersetEnd?'B':''}</span></td>
-        <td>
-          <div class="exname">${ex.name}${ssLabel}</div>
-          <div class="exwhy">${ex.why||''}</div>
-        </td>
-        <td class="sreps">${ex.sets} × ${ex.rep}</td>
-        <td><span class="tpill">${ex.tempo}</span></td>
-        <td><span class="rpill">${ex.rest}</span></td>
-      </tr>`;
-    }).join('');
+  const sessionsHtml = (p.workouts||[]).map((w,i)=>{
+    const rows = (w.exercises||[]).map((ex,ei)=>`<tr>
+      <td><span class="exnum">${ei+1}</span></td>
+      <td>
+        <div class="exname">${ex.name}${ex.technique&&ex.technique!=='Normal'?`<span class="ssbadge">${ex.technique}</span>`:''}</div>
+        <div class="exwhy">${ex.why||''}</div>
+        ${ex.spineNote?`<div style="font-size:10px;color:#d07070;margin-top:2px;">⚠ ${ex.spineNote}</div>`:''}
+      </td>
+      <td class="sreps">${ex.sets} × ${ex.rep}</td>
+      <td><span class="tpill">${ex.tempo||'—'}</span></td>
+      <td><span class="rpill">${ex.rest||'—'}</span></td>
+    </tr>`).join('');
     return `<div id="sdyn-${w.id}" class="session-content-dyn" style="${i>0?'display:none':''}">
       <div class="session-block">
         <div class="shdr">
           <div class="shdr-title">${w.name}</div>
           <div class="shdr-meta"><span>${w.dayName}</span><span>${w.focus||''}</span><span>${w.duration||''}</span></div>
+          ${w.spineAlert?`<div style="margin-top:5px;font-size:11px;color:#d07070;">⚠ ${w.spineAlert}</div>`:''}
         </div>
-        <table class="ext">
-          <tr><th style="width:28px">#</th><th>Exercício</th><th>Séries×Reps</th><th>Tempo</th><th>Descanso</th></tr>
-          ${rows}
-        </table>
+        <table class="ext"><tr><th style="width:28px">#</th><th>Exercício</th><th>Séries×Reps</th><th>Tempo</th><th>Descanso</th></tr>${rows}</table>
       </div>
     </div>`;
   }).join('');
 
-  // ── Progression table
-  const progRows=weekConfig.map(w=>{
-    const cls=w.deload?'class="dlrow"':'';
-    return `<tr ${cls}><td class="wkc">Semana ${w.week}</td><td>${w.volumePct===60||w.volumePct===50?'−'+(100-w.volumePct)+'%':w.volumePct===100?'Base':'+'+( w.volumePct-100)+'%'}</td><td>${w.intensityRange}</td><td>${w.rpe}</td><td>${w.focus}</td></tr>`;
-  });
-  // Insert phase dividers
-  const progHtml=`
-    <tr class="phrow"><td colspan="5">FASE 1 — ACUMULAÇÃO</td></tr>
-    ${progRows.slice(0,4).join('')}
-    <tr class="phrow"><td colspan="5">FASE 2 — INTENSIFICAÇÃO</td></tr>
-    ${progRows.slice(4,8).join('')}
-    <tr class="phrow"><td colspan="5">FASE 3 — PICO & REALIZAÇÃO</td></tr>
-    ${progRows.slice(8,12).join('')}
-  `;
+  // Week config table
+  const wkRows = weekCfg.map(w=>`
+    <tr ${w.deload?'class="dlrow"':''}>
+      <td class="wkc">Semana ${w.week}${w.deload?' ⬡':''}</td>
+      <td>${w.phase}</td>
+      <td>${w.intensity}</td>
+      <td>${w.focus}</td>
+    </tr>`).join('');
 
-  // ── Tips
-  const tipsHtml=tips.map(t=>
+  const tipsHtml = tips.map(t=>
     `<div class="tip-card"><div class="tip-title">${t.title}</div><div class="tip-body">${t.body}</div></div>`
   ).join('');
 
-  const html=`
+  // Cardio note
+  const cardioHtml = p.cardio ? `
+    <div class="ib ib-blue"><div class="ib-title">Cardio Prescrito</div>
+    <strong>Diário:</strong> ${p.cardio.prescription}<br>
+    <strong>Alternativa:</strong> ${p.cardio.alternative}<br>
+    <strong>Tipo:</strong> ${p.cardio.type}</div>` : '';
+
+  // Spine protocol
+  const spineHtml = p.spineProtocol ? `
+    <div class="ib ib-red"><div class="ib-title">⚠ Protocolo de Coluna — Hérnia de Disco</div>
+    ${p.spineProtocol.alert}<br><br>
+    <strong>Aquecimento obrigatório:</strong> ${p.spineProtocol.warmup}<br>
+    <strong>Sinais de alerta — pare imediatamente:</strong> ${p.spineProtocol.stopSigns}</div>` : '';
+
+  const html = `
     <div class="cover">
-      <div class="sec-label">${p.subtitle||'Programa Periodizado · 12 Semanas'}</div>
-      <div class="display-title">${(p.title||'HYPERTROPHY POWER BLOCK').replace(' ','<br><span class="accent">')}</span></div>
+      <div class="sec-label">${p.subtitle||'Programa 12 Semanas'}</div>
+      <div class="display-title">${(p.title||'PROGRAMA').replace(' ','<br><span class="accent">')}</span></div>
       <div class="gold-line"></div>
       <div class="cover-sub">${p.coverSub||''}</div>
     </div>
-
+    ${spineHtml}
+    ${cardioHtml}
     <div class="sec-label">Perfil do Atleta</div>
-    <div class="sec-title">Dados & 1RMs de Referência</div>
+    <div class="sec-title">Dados & PRs Atuais</div>
     <div class="stat-row">${statsHtml}</div>
     <div class="rm-row">${rmsHtml}</div>
-    ${athlete.note?`<div class="ib ib-gold"><div class="ib-title">Nota de diagnóstico</div>${athlete.note}</div>`:''}
-
+    ${athlete.note?`<div class="ib ib-gold"><div class="ib-title">Diagnóstico</div>${athlete.note}</div>`:''}
     <hr>
-    <div class="sec-label">Modelo de Periodização</div>
-    <div class="sec-title">DUP — Periodização Ondulatória Diária</div>
-    ${p.dupExplanation?`<div class="ib ib-gold"><div class="ib-title">Por que DUP?</div>${p.dupExplanation}</div>`:''}
-    <div class="phase-row">${phasesHtml}</div>
-
-    <hr>
+    ${phases.length?`
+    <div class="sec-label">Fases do Programa</div>
+    <div class="sec-title">Estrutura das 12 Semanas</div>
+    <div class="phase-row">${phasesHtml}</div><hr>`:''}
     <div class="sec-label">Divisão Semanal</div>
-    <div class="sec-title">${schedule.title||'Ter / Qui / Sex / Sáb / Dom'}</div>
+    <div class="sec-title">${(p.schedule&&p.schedule.title)||'Seg / Ter / Qua / Qui / Sex'}</div>
     <div class="sched-grid">${schedHtml}</div>
-    ${schedule.note?`<div class="ib ib-blue"><div class="ib-title">Lógica da sequência</div>${schedule.note}</div>`:''}
-
+    ${p.schedule&&p.schedule.note?`<div class="ib ib-blue"><div class="ib-title">Lógica</div>${p.schedule.note}</div>`:''}
     <hr>
     <div class="sec-label">Sessões Detalhadas</div>
-    <div class="sec-title">Exercícios, Séries e Justificativas</div>
+    <div class="sec-title">Exercícios & Justificativas</div>
     <div class="stabs">${tabsHtml}</div>
     ${sessionsHtml}
-    <div class="ib ib-blue"><div class="ib-title">Tempo (TUT)</div><strong>Excêntrico – Pausa inferior – Concêntrico – Pausa superior.</strong> Ex: 3-1-X-1 = desça 3s, pausa 1s, suba explosivo, pausa 1s. Controle o excêntrico — é onde ocorre o maior dano muscular que gera hipertrofia.</div>
-
     <hr>
     <div class="sec-label">Progressão Semana a Semana</div>
-    <div class="sec-title">Cargas, Intensidade & Deloads</div>
-    <div class="ib ib-green"><div class="ib-title">Regra de Progressão Dupla</div>${p.progressionRule||''}</div>
+    <div class="sec-title">Fases & Intensidade</div>
+    ${p.progressionRule?`<div class="ib ib-green"><div class="ib-title">Regra de Progressão</div>${p.progressionRule}</div>`:''}
     <div class="prog-wrap">
       <table class="prog-tbl">
-        <tr><th style="text-align:left;width:90px">Semana</th><th>Volume</th><th>% 1RM</th><th>RPE</th><th>Foco</th></tr>
-        ${progHtml}
+        <tr><th style="text-align:left;width:80px">Semana</th><th>Fase</th><th>Intensidade</th><th>Foco</th></tr>
+        ${wkRows}
       </table>
     </div>
-    <div class="ib ib-red"><div class="ib-title">Deload Semanas 4, 8 e 12 — Obrigatório</div>${p.deloadNote||''}</div>
-
+    ${p.deloadNote?`<div class="ib ib-red"><div class="ib-title">Deload</div>${p.deloadNote}</div>`:''}
     <hr>
-    <div class="sec-label">Diretrizes de Suporte</div>
-    <div class="sec-title">Sono, Nutrição & Método</div>
+    <div class="sec-label">Diretrizes</div>
+    <div class="sec-title">Dicas & Suporte</div>
     <div class="tips-grid">${tipsHtml}</div>
   `;
 
   document.getElementById('plano-loading').style.display='none';
-  const content=document.getElementById('plano-content');
-  content.innerHTML=html;
-  content.style.display='block';
-}
-
-function showSessionDyn(id,el){
-  document.querySelectorAll('.session-content-dyn').forEach(x=>x.style.display='none');
-  document.querySelectorAll('.stab').forEach(x=>x.classList.remove('active'));
-  document.getElementById(id).style.display='block';
-  if(el) el.classList.add('active');
+  const content = document.getElementById('plano-content');
+  content.innerHTML = html;
+  content.style.display = 'block';
 }
 
 /* ═══════════════════════════════════════════════════════════
-   RENDER NUTRIÇÃO PAGE FROM JSON
+   RENDER NUTRIÇÃO FROM JSON
 ═══════════════════════════════════════════════════════════ */
 function renderNutricaoPage(){
   if(!planJSON||!planJSON.nutrition) return;
-  const N=planJSON.nutrition;
+  const N = planJSON.nutrition;
 
-  // ── Macro cards
-  const macrosHtml=(N.macros||[]).map(m=>
-    `<div class="stat-card" style="background:var(--bg2);border:1px solid var(--border);">
-      <div class="stat-lbl">${m.label}</div>
-      <div class="stat-val" style="color:var(--gold2)">${m.value}<span class="stat-unit"> ${m.unit}</span></div>
-      <div style="font-size:9px;color:var(--text3);margin-top:2px">${m.kcal||''}</div>
-    </div>`
-  ).join('');
+  const wakeupHtml = N.protocol_wakeup ? `
+    <div style="border:1px solid var(--gold-border);border-radius:var(--rl);overflow:hidden;margin-bottom:10px;background:var(--gold-bg);">
+      <div style="padding:9px 13px;border-bottom:1px solid var(--gold-border);font-weight:600;font-size:13px;color:var(--gold2);">${N.protocol_wakeup.title}</div>
+      ${N.protocol_wakeup.items.map(it=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 13px;border-bottom:1px solid var(--gold-border);font-size:12px;">
+          <span style="color:var(--text)">${it.food}</span>
+          <span style="color:var(--gold2);font-family:'DM Mono';font-size:11px;">${it.amount}</span>
+        </div>`).join('')}
+    </div>` : '';
 
-  // ── Meals
-  const mealsHtml=(N.meals||[]).map(meal=>`
+  const mealsHtml = (N.meals||[]).map(meal=>`
     <div style="border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:10px;">
-      <div style="padding:10px 13px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <div style="padding:9px 13px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
         <div>
-          <div style="font-weight:600;font-size:13px">${meal.time} — ${meal.name}</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:2px">${meal.occasion||''}</div>
-        </div>
-        <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:13px;font-weight:600;color:var(--gold2)">${meal.kcal} kcal</div>
-          <div style="font-size:10px;color:var(--text3)">${meal.protein}g ptn</div>
+          <div style="font-weight:600;font-size:13px">${meal.time} — ${meal.occasion}</div>
         </div>
       </div>
-      <div style="padding:10px 13px;">
-        ${(meal.items||[]).map(item=>`<div style="font-size:12px;color:var(--text2);padding:3px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span>${item.food}</span><span style="color:var(--text3);font-size:11px">${item.amount}</span></div>`).join('')}
+      <div>
+        ${meal.items.map(it=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 13px;border-bottom:1px solid var(--border);font-size:12px;">
+            <span style="color:var(--text2)">${it.food}</span>
+            <span style="color:var(--gold2);font-family:'DM Mono';font-size:11px;">${it.amount}</span>
+          </div>`).join('')}
       </div>
-    </div>
-  `).join('');
+      ${meal.substitutions&&meal.substitutions.length?`
+        <div style="padding:8px 13px;background:var(--bg3);">
+          ${meal.substitutions.map(s=>`
+            <div style="font-size:11px;margin-bottom:5px;">
+              <span style="color:var(--gold);font-weight:600">Substituição ${s.original}:</span>
+              <span style="color:var(--text3)"> ${s.options}</span>
+            </div>`).join('')}
+        </div>` : ''}
+    </div>`).join('');
 
-  // ── Rules
-  const rulesHtml=(N.rules||[]).map(r=>
-    `<div class="tip-card"><div class="tip-title">${r.title}</div><div class="tip-body">${r.body}</div></div>`
-  ).join('');
-
-  // ── Supplements
-  const suppsHtml=(N.supplements||[]).map(s=>
-    `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;">
+  const suppsHtml = (N.supplements_prescribed||N.supplements||[]).map(s=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;">
       <span style="font-weight:500;color:var(--text)">${s.name}</span>
-      <span style="color:var(--gold2);font-family:'DM Mono';font-size:11px">${s.dose}</span>
-    </div>`
-  ).join('');
+      <span style="color:var(--gold2);font-family:'DM Mono';font-size:11px;">${s.dose}</span>
+    </div>`).join('');
 
-  const html=`
+  const html = `
     <div class="cover">
-      <div class="sec-label">Plano Alimentar · Recomposição Corporal</div>
+      <div class="sec-label">${N.source||'Plano Alimentar'}</div>
       <div class="display-title">NUTRITION<br><span class="accent">PLAN</span></div>
       <div class="gold-line"></div>
-      <div class="cover-sub">${N.subtitle||'Déficit controlado · Preservação de massa muscular'}</div>
+      <div class="cover-sub">${N.subtitle||''}</div>
     </div>
-
     ${N.intro?`<div class="ib ib-gold"><div class="ib-title">Estratégia</div>${N.intro}</div>`:''}
-
-    <div class="sec-label">Distribuição de Macros</div>
-    <div class="sec-title">Meta Diária — ${N.totalKcal||'~2.400'} kcal</div>
-    <div class="stat-row" style="grid-template-columns:repeat(4,1fr)">${macrosHtml}</div>
-
-    <hr>
-    <div class="sec-label">Refeições do Dia</div>
-    <div class="sec-title">Estrutura Alimentar</div>
+    <div class="sec-label">Protocolo ao Acordar</div>
+    ${wakeupHtml}
+    <div class="sec-label">Refeições</div>
+    <div class="sec-title">Estrutura Alimentar Diária</div>
     ${mealsHtml}
-
-    <hr>
-    <div class="sec-label">Regras Práticas</div>
-    <div class="sec-title">O que fazer & evitar</div>
-    <div class="tips-grid">${rulesHtml}</div>
-
+    ${N.cardio_nutrition_note?`<div class="ib ib-blue"><div class="ib-title">Cardio & Nutrição</div>${N.cardio_nutrition_note}</div>`:''}
     <hr>
     <div class="sec-label">Suplementação</div>
-    <div class="sec-title">Stack Recomendado</div>
+    <div class="sec-title">Protocolo Prescrito</div>
     <div style="border:1px solid var(--border);border-radius:var(--rl);padding:4px 13px;background:var(--bg2);">${suppsHtml}</div>
-
-    ${N.expectation?`<div class="ib ib-green" style="margin-top:14px"><div class="ib-title">Expectativa realista em 12 semanas</div>${N.expectation}</div>`:''}
   `;
 
   document.getElementById('nutricao-loading').style.display='none';
-  const content=document.getElementById('nutricao-content');
-  content.innerHTML=html;
-  content.style.display='block';
+  const content = document.getElementById('nutricao-content');
+  content.innerHTML = html;
+  content.style.display = 'block';
 }
 
 /* ═══════════════════════════════════════════════════════════
-   UPDATED finishSetup — renders both pages from JSON
-═══════════════════════════════════════════════════════════ */
-function finishSetup(){
-  document.getElementById('setup-overlay').style.display='none';
-  document.getElementById('main-app').style.display='block';
-  const bidEl=document.getElementById('bin-id-display');
-  if(bidEl) bidEl.textContent=BIN_ID;
-  renderPlanoPage();
-  renderNutricaoPage();
-  renderTrackerExercises();
-  renderWkHistGrid();
-  updatePRDisplay();
-}
-
-/* ═══════════════════════════════════════════════════════════
-   BOOT — credenciais fixas + carrega ambos os bins
+   BOOT
 ═══════════════════════════════════════════════════════════ */
 (async function boot(){
   API_KEY      = '$2a$10$aopYMJm3ovtvnPec08jt1.WtUPm6Te9sKn6Zg2A00gAM1lHAJXTgW';
   BIN_ID       = '6a555fb3da38895dfe591e5a';
   PLAN_BIN_ID  = '6a555e2eda38895dfe591808';
-
+  
   setCloud('syncing','Carregando...');
   const [planOk, histOk] = await Promise.all([loadPlanBin(), loadBin()]);
   if(planOk && histOk){
     finishSetup();
   } else {
-    // fallback: mostra setup para o usuário reconfigurar
     document.getElementById('setup-overlay').style.display='flex';
   }
 })();
 </script>
 </body>
 </html>
+
